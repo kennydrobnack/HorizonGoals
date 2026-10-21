@@ -1,0 +1,17 @@
+{
+  "name": "horizongoals",
+  "productName": "HorizonGoals",
+  "version": "2.0.0",
+  "description": "Count down to a goal: a menu bar and wallpaper countdown to your goal",
+  "main": "src/main.js",
+  "license": "CC0-1.0",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.js",
+    "package": "electron-packager . HorizonGoals --platform=darwin --arch=arm64 --out=dist --overwrite --prune=true --ignore='^/(dist|test|README.md|\\.gitignore)' --app-bundle-id=com.horizongoals.app"
+  },
+  "devDependencies": {
+    "@electron/packager": "^20.3.0",
+    "electron": "^44.9.2"
+  }
+}

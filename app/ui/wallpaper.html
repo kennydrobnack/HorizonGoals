@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'self'">
+<title>HorizonGoals wallpaper</title>
+<style>
+    html, body { margin: 0; height: 100%; }
+    body {
+        display: flex; align-items: center; justify-content: center;
+        font-family: -apple-system, "SF Pro Display", "Helvetica Neue", sans-serif;
+        text-align: center;
+    }
+    .row { display: flex; gap: 0.6em; }
+    .unit { margin: 0 0.4em; }
+    .num { font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+    .label { opacity: .8; font-weight: 700; letter-spacing: .05em; margin-top: .4em; }
+    .bar { width: 60vw; height: 1.4em; border-radius: .7em; background: rgba(255,255,255,.18); overflow: hidden; }
+    .fill { height: 100%; background: currentColor; }
+    .caption { margin-top: .8em; font-weight: 700; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="wallpaper.js"></script>
+</body>
+</html>

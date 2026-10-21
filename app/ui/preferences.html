@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'self'">
+<title>HorizonGoals Preferences</title>
+<style>
+    :root { color-scheme: light dark; }
+    body { font: 13px -apple-system, "Helvetica Neue", sans-serif; margin: 0; padding: 20px 24px; }
+    h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; opacity: .6; margin: 22px 0 8px; }
+    h2:first-of-type { margin-top: 0; }
+    .field { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 5px 0; }
+    .units { display: flex; gap: 10px; flex-wrap: wrap; }
+    .units label { display: flex; align-items: center; gap: 4px; }
+    #message { min-height: 18px; margin-top: 12px; font-weight: 600; }
+    #message.error { color: #d33; }
+    #message.ok { color: #2a8; }
+    .actions { display: flex; justify-content: space-between; margin-top: 16px; }
+    input[type=color] { width: 44px; height: 24px; padding: 0; }
+</style>
+</head>
+<body>
+<h2>Goal</h2>
+<div class="field"><span>Start</span><span><input type="date" id="startDate"> <input type="time" id="startTime"></span></div>
+<div class="field"><span>End</span><span><input type="date" id="endDate"> <input type="time" id="endTime"></span></div>
+
+<h2>Menu bar</h2>
+<div class="field"><span>Show</span>
+    <select id="menubarFormat">
+        <option value="icon">Icon</option>
+        <option value="countdown">Countdown</option>
+        <option value="percentage">Percentage</option>
+        <option value="iconPlusCountdown">Icon + countdown</option>
+        <option value="iconPlusPercentage">Icon + percentage</option>
+    </select></div>
+<div class="field"><span>Countdown units</span><span class="units" id="menubarUnits"></span></div>
+
+<h2>Wallpaper</h2>
+<div class="field"><span>Show</span>
+    <select id="wallpaperFormat">
+        <option value="countdown">Countdown</option>
+        <option value="progressbar">Progress bar</option>
+        <option value="percentage">Percentage</option>
+        <option value="no">Off (menu bar only)</option>
+    </select></div>
+<div class="field"><span>Countdown units</span><span class="units" id="wallpaperUnits"></span></div>
+<div class="field"><span>Background</span><input type="color" id="backgroundColor"></div>
+<div class="field"><span>Text</span><input type="color" id="textColor"></div>
+<div class="field"><span>Size</span>
+    <select id="size"><option value="small">Small</option><option value="normal">Normal</option><option value="big">Big</option></select></div>
+<div class="field"><span>Refresh every</span>
+    <select id="refreshEvery">
+        <option value="60">1 minute</option><option value="300">5 minutes</option>
+        <option value="900">15 minutes</option><option value="3600">1 hour</option>
+        <option value="86400">1 day</option>
+    </select></div>
+<div class="field"><span>Apply to all screens</span><input type="checkbox" id="allScreens"></div>
+
+<h2>General</h2>
+<div class="field"><span>Open at login</span><input type="checkbox" id="startAtLogin"></div>
+
+<div id="message"></div>
+<div class="actions"><button id="reset">Reset</button><button id="save">Save</button></div>
+<script src="preferences.js"></script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Build output (rebuild with `npm run package` in app/)
+dist/
+out/
+
+# Large raw REA evidence bundle (regenerate from the analysis; the markdown report is tracked)
+reports/*.evidence.json
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment and secrets
+.env
+.env.*
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editors
+.idea/
+.vscode/
+*.swp
