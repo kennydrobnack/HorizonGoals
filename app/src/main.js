@@ -3,9 +3,10 @@
 const fs = require('node:fs')
 const path = require('node:path')
 const {pathToFileURL} = require('node:url')
-const {app, BrowserWindow, Menu, Tray, dialog, ipcMain, nativeImage, powerMonitor} = require('electron')
+const {app, BrowserWindow, Menu, Tray, dialog, ipcMain, nativeImage, nativeTheme, powerMonitor} = require('electron')
 const core = require('./core')
 const wallpaper = require('./wallpaper')
+const autostart = require('./autostart')
 const {createStore, defaults, merge, safeBackground, IMAGE_EXTENSIONS} = require('./settings')
 
 let store
@@ -26,10 +27,43 @@ function span() {
     return {start, end}
 }
 
+const IS_MAC = process.platform === 'darwin'
+
 function trayIcon(index) {
     const icon = nativeImage.createFromPath(path.join(__dirname, `../assets/icons/hourglass/icon-${index}.png`))
-    icon.setTemplateImage(true)
-    return icon
+    if (IS_MAC) {
+        icon.setTemplateImage(true)
+        return icon
+    }
+    // Only macOS recolors template images. Elsewhere, tint the black glyph to suit the panel theme.
+    return tint(icon, nativeTheme.shouldUseDarkColors ? 255 : 0)
+}
+
+function tint(icon, channel) {
+    const {width, height} = icon.getSize()
+    const bitmap = Buffer.from(icon.toBitmap()) // BGRA
+    for (let i = 0; i < bitmap.length; i += 4) {
+        bitmap[i] = bitmap[i + 1] = bitmap[i + 2] = channel
+    }
+    return nativeImage.createFromBitmap(bitmap, {width, height})
+}
+
+// macOS shows text beside the icon. Other platforms have no such API, so the text goes
+// into the tooltip and the top (disabled) entry of the tray menu.
+function showTitle(text) {
+    if (IS_MAC) return tray.setTitle(text)
+    tray.setToolTip(text || 'HorizonGoals')
+    tray.setContextMenu(buildMenu(text))
+}
+
+function buildMenu(label) {
+    const items = [
+        {label: 'Preferences…', click: openPreferences},
+        {type: 'separator'},
+        {label: 'Quit HorizonGoals', role: 'quit'}
+    ]
+    if (!IS_MAC && label) items.unshift({label, enabled: false}, {type: 'separator'})
+    return Menu.buildFromTemplate(items)
 }
 
 function updateTray() {
@@ -39,22 +73,22 @@ function updateTray() {
 
     if (end === null) {
         tray.setImage(trayIcon(0))
-        tray.setTitle('Set a goal')
+        showTitle('Set a goal')
         return
     }
 
     const pct = core.percentage(now, start, end)
     const parts = core.breakdown(now, end, m.textFormat)
-    const wantsIcon = m.format === 'icon' || m.format.startsWith('iconPlus')
+    const wantsIcon = !IS_MAC || m.format === 'icon' || m.format.startsWith('iconPlus')
 
     tray.setImage(wantsIcon ? trayIcon(core.iconIndex(pct)) : nativeImage.createEmpty())
 
     if (m.format === 'countdown' || m.format === 'iconPlusCountdown') {
-        tray.setTitle(core.formatCountdown(parts, m.textFormat))
+        showTitle(core.formatCountdown(parts, m.textFormat))
     } else if (m.format === 'percentage' || m.format === 'iconPlusPercentage') {
-        tray.setTitle(`${pct}%`)
+        showTitle(`${pct}%`)
     } else {
-        tray.setTitle('')
+        showTitle(IS_MAC ? '' : `${pct}%`)
     }
 }
 
@@ -99,6 +133,8 @@ function tick() {
 
 function applyLogin() {
     const wanted = settings.general.startAtLogin
+    // Electron's login item API does nothing on Linux, where autostart is a .desktop file.
+    if (process.platform === 'linux') return autostart.set(wanted)
     if (app.getLoginItemSettings().openAtLogin !== wanted) app.setLoginItemSettings({openAtLogin: wanted})
 }
 
@@ -179,17 +215,14 @@ ipcMain.handle('settings:reset', () => {
 })
 
 app.whenReady().then(() => {
-    if (process.platform === 'darwin') app.dock.hide()
+    if (IS_MAC) app.dock.hide()
 
     store = createStore(app.getPath('userData'))
     settings = store.load()
 
     tray = new Tray(trayIcon(0))
-    tray.setContextMenu(Menu.buildFromTemplate([
-        {label: 'Preferences…', click: openPreferences},
-        {type: 'separator'},
-        {label: 'Quit HorizonGoals', role: 'quit'}
-    ]))
+    tray.setContextMenu(buildMenu())
+    nativeTheme.on('updated', updateTray)
 
     applyLogin()
     tick()
