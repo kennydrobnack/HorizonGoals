@@ -16,6 +16,7 @@
     #message.error { color: #d33; }
     #message.ok { color: #2a8; }
     .actions { display: flex; justify-content: space-between; margin-top: 16px; }
+    #imageName { opacity: .7; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 300px; }
     input[type=color] { width: 44px; height: 24px; padding: 0; }
 </style>
 </head>
@@ -44,7 +45,10 @@
         <option value="no">Off (menu bar only)</option>
     </select></div>
 <div class="field"><span>Countdown units</span><span class="units" id="wallpaperUnits"></span></div>
-<div class="field"><span>Background</span><input type="color" id="backgroundColor"></div>
+<div class="field"><span>Background</span>
+    <select id="backgroundType"><option value="solid">Solid color</option><option value="image">Image</option></select></div>
+<div class="field" id="colorRow"><span>Background color</span><input type="color" id="backgroundColor"></div>
+<div class="field" id="imageRow"><span id="imageName">No image chosen</span><button id="chooseImage" type="button">Choose image…</button></div>
 <div class="field"><span>Text</span><input type="color" id="textColor"></div>
 <div class="field"><span>Size</span>
     <select id="size"><option value="small">Small</option><option value="normal">Normal</option><option value="big">Big</option></select></div>

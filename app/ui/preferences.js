@@ -14,6 +14,25 @@ for (const group of ['menubarUnits', 'wallpaperUnits']) {
     }
 }
 
+let backgroundImage = null
+
+function showBackground() {
+    const isImage = $('backgroundType').value === 'image'
+    $('colorRow').hidden = isImage
+    $('imageRow').hidden = !isImage
+    $('imageName').textContent = backgroundImage ? backgroundImage.split('/').pop() : 'No image chosen'
+}
+
+$('backgroundType').addEventListener('change', showBackground)
+
+$('chooseImage').addEventListener('click', async () => {
+    const chosen = await window.horizonGoals.chooseBackground()
+    if (chosen) {
+        backgroundImage = chosen
+        showBackground()
+    }
+})
+
 function fill(s) {
     $('startDate').value = s.general.startDate || ''
     $('startTime').value = s.general.startTime || ''
@@ -25,6 +44,9 @@ function fill(s) {
     $('menubarFormat').value = s.menubar.format
     $('wallpaperFormat').value = s.wallpaper.format
     $('backgroundColor').value = s.wallpaper.backgroundColor
+    $('backgroundType').value = s.wallpaper.backgroundType
+    backgroundImage = s.wallpaper.backgroundImage
+    showBackground()
     $('textColor').value = s.wallpaper.textColor
     $('size').value = s.wallpaper.size
     for (const unit of UNITS) {
@@ -52,6 +74,8 @@ function collect() {
         wallpaper: {
             format: $('wallpaperFormat').value,
             textFormat: units('wallpaperUnits'),
+            backgroundType: $('backgroundType').value,
+            backgroundImage,
             backgroundColor: $('backgroundColor').value,
             textColor: $('textColor').value,
             size: $('size').value

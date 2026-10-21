@@ -1,12 +1,28 @@
 'use strict'
 
 const state = JSON.parse(decodeURIComponent(location.hash.slice(1)))
-const {style, time, percentage, format} = state
+const {style, time, percentage, format, backgroundImageUrl} = state
 
 const scale = {small: 0.65, normal: 1, big: 1.5}[style.size] || 1
 const base = Math.round(window.innerHeight / 10 * scale)
 
-document.body.style.background = style.backgroundColor
+document.body.style.backgroundColor = style.backgroundColor
+
+// Resolves once the background image has loaded (or failed, leaving the solid color).
+window.horizonReady = new Promise(resolve => {
+    if (!backgroundImageUrl) return resolve()
+    const img = new Image()
+    img.onload = () => {
+        document.body.classList.add('photo')
+        document.body.style.backgroundImage = `url("${backgroundImageUrl}")`
+        document.body.style.backgroundSize = 'cover'
+        document.body.style.backgroundPosition = 'center'
+        document.body.style.backgroundRepeat = 'no-repeat'
+        resolve()
+    }
+    img.onerror = () => resolve()
+    img.src = backgroundImageUrl
+})
 document.body.style.color = style.textColor
 document.body.style.fontSize = base + 'px'
 

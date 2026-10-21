@@ -46,9 +46,9 @@ async function render({dir, state, allScreens}) {
         await win.loadFile(path.join(__dirname, '../ui/wallpaper.html'), {
             hash: encodeURIComponent(JSON.stringify(state))
         })
-        // Wait for fonts and two frames so the capture never sees an unpainted page.
+        // Wait for the background image, fonts and two frames so the capture never sees an unpainted page.
         await win.webContents.executeJavaScript(
-            'document.fonts.ready.then(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(() => r(true)))))'
+            'Promise.all([window.horizonReady, document.fonts.ready]).then(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(() => r(true)))))'
         )
         const image = await win.webContents.capturePage()
         const file = path.join(dir, `wallpaper-${Date.now()}.png`)
