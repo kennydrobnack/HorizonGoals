@@ -3,7 +3,7 @@
 const fs = require('node:fs')
 const path = require('node:path')
 const {pathToFileURL} = require('node:url')
-const {app, BrowserWindow, Menu, Tray, dialog, ipcMain, nativeImage, powerMonitor} = require('electron')
+const {app, BrowserWindow, Menu, Tray, dialog, ipcMain, nativeImage, nativeTheme, powerMonitor} = require('electron')
 const core = require('./core')
 const wallpaper = require('./wallpaper')
 const {createStore, defaults, merge, safeBackground, IMAGE_EXTENSIONS} = require('./settings')
@@ -14,6 +14,9 @@ let tray = null
 let prefsWindow = null
 let timer = null
 let rendering = false
+
+const isMac = process.platform === 'darwin'
+const isWindows = process.platform === 'win32'
 
 function backgroundDir() {
     return path.join(app.getPath('userData'), 'custom-background')
@@ -27,9 +30,17 @@ function span() {
 }
 
 function trayIcon(index) {
-    const icon = nativeImage.createFromPath(path.join(__dirname, `../assets/icons/hourglass/icon-${index}.png`))
-    icon.setTemplateImage(true)
+    // macOS tints template images itself. Windows doesn't, so pick black or white to match the taskbar.
+    const set = isWindows && nativeTheme.shouldUseDarkColors ? 'hourglass-light' : 'hourglass'
+    const icon = nativeImage.createFromPath(path.join(__dirname, `../assets/icons/${set}/icon-${index}.png`))
+    if (isMac) icon.setTemplateImage(true)
     return icon
+}
+
+// The macOS menu bar can show text next to the icon. Windows tray icons can't, so the text goes in the tooltip.
+function setTrayText(text) {
+    if (isMac) tray.setTitle(text)
+    else if (isWindows) tray.setToolTip(text ? `HorizonGoals: ${text}` : 'HorizonGoals')
 }
 
 function updateTray() {
@@ -39,7 +50,7 @@ function updateTray() {
 
     if (end === null) {
         tray.setImage(trayIcon(0))
-        tray.setTitle('Set a goal')
+        setTrayText('Set a goal')
         return
     }
 
@@ -47,14 +58,15 @@ function updateTray() {
     const parts = core.breakdown(now, end, m.textFormat)
     const wantsIcon = m.format === 'icon' || m.format.startsWith('iconPlus')
 
-    tray.setImage(wantsIcon ? trayIcon(core.iconIndex(pct)) : nativeImage.createEmpty())
+    // A Windows tray icon can't be blank, so text-only formats still show the hourglass there.
+    tray.setImage(wantsIcon || isWindows ? trayIcon(core.iconIndex(pct)) : nativeImage.createEmpty())
 
     if (m.format === 'countdown' || m.format === 'iconPlusCountdown') {
-        tray.setTitle(core.formatCountdown(parts, m.textFormat))
+        setTrayText(core.formatCountdown(parts, m.textFormat))
     } else if (m.format === 'percentage' || m.format === 'iconPlusPercentage') {
-        tray.setTitle(`${pct}%`)
+        setTrayText(`${pct}%`)
     } else {
-        tray.setTitle('')
+        setTrayText(isWindows ? `${pct}%` : '')
     }
 }
 
@@ -178,8 +190,14 @@ ipcMain.handle('settings:reset', () => {
     return settings
 })
 
+// Only one copy should own the tray icon and the wallpaper.
+if (!app.requestSingleInstanceLock()) app.quit()
+else app.on('second-instance', openPreferences)
+
+app.setAppUserModelId('com.horizongoals.app')
+
 app.whenReady().then(() => {
-    if (process.platform === 'darwin') app.dock.hide()
+    if (isMac) app.dock.hide()
 
     store = createStore(app.getPath('userData'))
     settings = store.load()
@@ -190,12 +208,15 @@ app.whenReady().then(() => {
         {type: 'separator'},
         {label: 'Quit HorizonGoals', role: 'quit'}
     ]))
+    tray.setToolTip('HorizonGoals')
+    if (isWindows) tray.on('click', openPreferences)
 
     applyLogin()
     tick()
     if (!settings.general.endDate) openPreferences()
 
     powerMonitor.on('resume', () => setTimeout(tick, 2000))
+    nativeTheme.on('updated', updateTray)
 })
 
 // Keep running in the menu bar when the preferences window closes.
